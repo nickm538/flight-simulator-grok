@@ -10,7 +10,7 @@ The flight model is a simplified game approximation. It is not certified, not ap
 
 You start on the stub at the end of runway 31L, flaps 5, parking brake set. Taxi straight ahead onto the runway, take off, fly the left pattern over the bay, and land back on 31L. Gate B12 is on the terminal ramp after rollout.
 
-The phone never shows the whole cockpit. A compact primary flight display stays on screen with speed, attitude, altitude, vertical speed, and heading. The right edge is the thrust lever, flap detents, and gear handle. Navigation, engines, the mode control panel, the FMC, and ATC open one page at a time. On a wide desktop window those first three sit side by side, and the other pages still open over the view.
+The phone never shows the whole cockpit. A compact primary flight display stays on screen with speed, attitude, altitude, vertical speed, and heading, and it sits in the bottom strip so it does not cover the windshield. The right edge is the thrust lever, flap detents, and gear handle, with hit targets at least 44px. Navigation, engines, the mode control panel, the FMC, and ATC open one page at a time over the view; on a phone those page buttons wrap under the display so they stay on screen. On a wide desktop window the primary flight display, nav, and engines sit side by side, and the other pages still open over the view. Phone viewports cap the WebGL pixel ratio at 1.5, leave shadows off, and shorten the fog only if frames stay slower than about 30 per second.
 
 Drag the windshield to pitch and roll. Pull down to raise the nose. Two fingers, the right mouse button, or LOOK glance around. The exterior view shows the fans, gear, wheels, and the takeoff puff.
 

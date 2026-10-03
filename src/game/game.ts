@@ -73,18 +73,27 @@ export class Game {
   private note = 'Flaps 5, park brake set. You are lined up on 31L. Add thrust to roll.'
   private wideMedia = window.matchMedia('(min-width: 1100px) and (min-height: 700px)')
   private last = performance.now()
+  private pixelRatio = 1
+  private fogScale = 1
+  private slowFrames = 0
+  private fastFrames = 0
+  /** Skip adaptation across a viewport-tier change so one resize hitch does not cut desktop quality. */
+  private settleFrames = 90
+  private readonly frameWindow: number[] = []
 
   constructor(private readonly app: HTMLElement) {
-    const coarse = window.matchMedia('(pointer: coarse)').matches
+    const phone = this.phoneTier()
+    this.pixelRatio = phone ? 1.5 : 2
     this.renderer = new THREE.WebGLRenderer({
-      antialias: !coarse,
+      antialias: !phone,
       powerPreference: 'high-performance',
       stencil: false,
     })
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarse ? 1.5 : 2))
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.pixelRatio))
     this.renderer.outputColorSpace = THREE.SRGBColorSpace
-    this.renderer.shadowMap.enabled = !coarse
+    this.renderer.shadowMap.enabled = !phone
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    this.renderer.domElement.style.touchAction = 'none'
     this.renderer.domElement.className = 'world-canvas'
     this.app.appendChild(this.renderer.domElement)
 
@@ -157,13 +166,43 @@ export class Game {
     this.bindKeys()
     this.resize()
     window.addEventListener('resize', () => this.resize())
+    this.wideMedia.addEventListener('change', () => {
+      this.pixelRatio = this.phoneTier() ? 1.5 : 2
+      this.fogScale = 1
+      this.slowFrames = 0
+      this.fastFrames = 0
+      this.frameWindow.length = 0
+      this.settleFrames = 45
+      this.renderer.shadowMap.enabled = !this.phoneTier()
+      this.sky.setDetail(1)
+      this.resize()
+    })
+  }
+
+  quality() {
+    const samples = this.frameWindow.length
+    const sorted = [...this.frameWindow].sort((a, b) => a - b)
+    const at = (p: number) => (samples === 0 ? 0 : sorted[Math.min(samples - 1, Math.floor(p * (samples - 1)))])
+    const mean = samples === 0 ? 0 : this.frameWindow.reduce((sum, ms) => sum + ms, 0) / samples
+    return {
+      samples,
+      meanMs: mean,
+      p50Ms: at(0.5),
+      p95Ms: at(0.95),
+      pixelRatio: this.renderer.getPixelRatio(),
+      ratioTarget: this.pixelRatio,
+      fogScale: this.fogScale,
+      shadows: this.renderer.shadowMap.enabled,
+      phone: this.phoneTier(),
+    }
   }
 
   start(): void {
     const loop = (now: number) => {
-      const dt = Math.min(0.05, (now - this.last) / 1000 || 0)
+      const elapsedMs = now - this.last
       this.last = now
-      this.frame(dt)
+      const dt = Math.min(0.05, elapsedMs / 1000 || 0)
+      this.frame(dt, elapsedMs)
       requestAnimationFrame(loop)
     }
     requestAnimationFrame(loop)
@@ -193,7 +232,8 @@ export class Game {
     }
   }
 
-  private frame(dt: number): void {
+  private frame(dt: number, elapsedMs: number): void {
+    this.adaptQuality(elapsedMs)
     this.time += dt
     this.keyPitch = glide(this.keyPitch, axis(this.keys, 'ArrowUp', 'KeyW', 'ArrowDown', 'KeyS'), dt)
     this.keyRoll = glide(this.keyRoll, axis(this.keys, 'ArrowRight', 'KeyD', 'ArrowLeft', 'KeyA'), dt)
@@ -258,6 +298,7 @@ export class Game {
     this.updateCameras(dt)
     this.overlay.update(this.snapshot())
     const camera = this.chase ? this.chaseCam : this.cockpitCam
+    this.frameViewport()
     this.renderer.render(this.scene, camera)
   }
 
@@ -462,14 +503,83 @@ export class Game {
     window.addEventListener('blur', () => this.keys.clear())
   }
 
+  private phoneTier(): boolean {
+    return !this.wideMedia.matches
+  }
+
+  private adaptQuality(elapsedMs: number): void {
+    if (this.settleFrames > 0) {
+      this.settleFrames -= 1
+      return
+    }
+    const ms = elapsedMs
+    // A single stalled frame (resize, tab hidden) is not a sustained frame rate.
+    if (!(ms > 0 && ms < 80)) {
+      this.slowFrames = 0
+      return
+    }
+    this.frameWindow.push(ms)
+    if (this.frameWindow.length > 120) this.frameWindow.shift()
+    const cap = this.phoneTier() ? 1.5 : 2
+    if (ms > 34) {
+      this.slowFrames += 1
+      this.fastFrames = 0
+    } else if (ms < 16.7) {
+      this.fastFrames += 1
+      this.slowFrames = 0
+    } else {
+      this.slowFrames = 0
+      this.fastFrames = 0
+    }
+    if (this.slowFrames >= 18 && (this.pixelRatio > 1 || this.fogScale > 0.62)) {
+      this.pixelRatio = Math.max(1, Math.round((this.pixelRatio - 0.25) * 4) / 4)
+      this.fogScale = Math.max(0.62, Math.round((this.fogScale - 0.12) * 100) / 100)
+      this.slowFrames = 0
+      this.fastFrames = 0
+      this.sky.setDetail(this.fogScale)
+      this.resize()
+    } else if (this.fastFrames >= 150 && (this.pixelRatio < cap || this.fogScale < 1)) {
+      this.pixelRatio = Math.min(cap, Math.round((this.pixelRatio + 0.25) * 4) / 4)
+      this.fogScale = Math.min(1, Math.round((this.fogScale + 0.08) * 100) / 100)
+      this.slowFrames = 0
+      this.fastFrames = 0
+      this.sky.setDetail(this.fogScale)
+      this.resize()
+    }
+  }
+
   private resize(): void {
     const width = this.app.clientWidth || window.innerWidth
     const height = this.app.clientHeight || window.innerHeight
-    const coarse = window.matchMedia('(pointer: coarse)').matches
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarse ? 1.5 : 2))
+    const cap = this.phoneTier() ? 1.5 : 2
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.pixelRatio, cap))
     this.renderer.setSize(width, height, false)
-    this.cockpitCam.aspect = width / height
-    this.chaseCam.aspect = width / height
+    this.frameViewport()
+  }
+
+  /** On a phone, draw into the windshield above the dock and left of the thumb rail. */
+  private frameViewport(): void {
+    const width = this.app.clientWidth || window.innerWidth
+    const height = this.app.clientHeight || window.innerHeight
+    let viewX = 0
+    let viewY = 0
+    let viewW = width
+    let viewH = height
+    if (this.phoneTier()) {
+      const dock = this.app.querySelector('.dock')?.getBoundingClientRect().height ?? 0
+      const thumbLeft = this.app.querySelector('.thumb')?.getBoundingClientRect().left ?? width
+      viewW = Math.max(1, Math.round(thumbLeft))
+      viewH = Math.max(1, Math.round(height - dock))
+      viewY = Math.max(0, Math.round(height - viewH))
+      this.renderer.setScissorTest(true)
+    } else {
+      this.renderer.setScissorTest(false)
+    }
+    this.renderer.setViewport(viewX, viewY, viewW, viewH)
+    this.renderer.setScissor(viewX, viewY, viewW, viewH)
+    const aspect = viewW / viewH
+    this.cockpitCam.aspect = aspect
+    this.chaseCam.aspect = aspect
     this.cockpitCam.updateProjectionMatrix()
     this.chaseCam.updateProjectionMatrix()
   }

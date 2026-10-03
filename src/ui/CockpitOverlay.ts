@@ -106,11 +106,28 @@ export class CockpitOverlay {
     })
     this.bind()
     this.applyPage()
+    this.watchDock()
+  }
+
+  private watchDock(): void {
+    const dock = this.root.querySelector('.dock')
+    if (!(dock instanceof HTMLElement)) return
+    const sync = () => {
+      const height = Math.ceil(dock.getBoundingClientRect().height)
+      if (height > 0) this.root.style.setProperty('--dock', `${height}px`)
+    }
+    const observer = new ResizeObserver(sync)
+    observer.observe(dock)
+    sync()
   }
 
   closePage(): void {
     this.page = null
     this.applyPage()
+  }
+
+  private canvasCap(): number {
+    return this.wide ? 2 : 1.5
   }
 
   update(snapshot: HudSnapshot): void {
@@ -159,13 +176,17 @@ export class CockpitOverlay {
       const value = 1 - (event.clientY - rect.top) / rect.height
       this.handlers.onThrottle(Math.max(0, Math.min(1, value)))
     }
+    const blockGesture = (event: Event) => event.preventDefault()
     throttle?.addEventListener('pointerdown', (event) => {
+      event.preventDefault()
       throttle.setPointerCapture(event.pointerId)
       moveThrottle(event)
     })
     throttle?.addEventListener('pointermove', (event) => {
       if (throttle.hasPointerCapture(event.pointerId)) moveThrottle(event)
     })
+    throttle?.addEventListener('touchstart', blockGesture, { passive: false })
+    throttle?.addEventListener('touchmove', blockGesture, { passive: false })
 
     this.root.querySelectorAll<HTMLButtonElement>('[data-flap]').forEach((button) => {
       button.addEventListener('click', () => this.handlers.onFlapIndex(Number(button.dataset.flap)))
@@ -232,8 +253,14 @@ export class CockpitOverlay {
     const yoke = this.root.querySelector<HTMLElement>('.yoke')
     if (!yoke) return
     const pointers = new Map<number, { x: number; y: number; ox: number; oy: number }>()
-    yoke.addEventListener('contextmenu', (event) => event.preventDefault())
+    const blockGesture = (event: Event) => event.preventDefault()
+    yoke.addEventListener('contextmenu', blockGesture)
+    yoke.addEventListener('touchstart', blockGesture, { passive: false })
+    yoke.addEventListener('touchmove', blockGesture, { passive: false })
+    window.addEventListener('gesturestart', blockGesture, { passive: false })
+    window.addEventListener('gesturechange', blockGesture, { passive: false })
     yoke.addEventListener('pointerdown', (event) => {
+      event.preventDefault()
       yoke.setPointerCapture(event.pointerId)
       pointers.set(event.pointerId, { x: event.clientX, y: event.clientY, ox: event.clientX, oy: event.clientY })
       if (pointers.size >= 2) this.handlers.onYoke(0, 0)
@@ -318,12 +345,16 @@ export class CockpitOverlay {
   }
 
   private paintAtc(snapshot: HudSnapshot): void {
-    const log = this.root.querySelector('[data-bind="atc-log"]')
+    const log = this.root.querySelector<HTMLElement>('[data-bind="atc-log"]')
     if (log) {
-      log.innerHTML = snapshot.atcLines
+      const html = snapshot.atcLines
         .map((line) => `<p class="${line.who}"><strong>${line.who === 'you' ? 'You' : 'ATC'}</strong> ${escapeHtml(line.text)}</p>`)
         .join('')
-      log.scrollTop = log.scrollHeight
+      if (log.dataset.log !== html) {
+        log.dataset.log = html
+        log.innerHTML = html
+        log.scrollTop = log.scrollHeight
+      }
     }
     const menu = this.root.querySelector<HTMLElement>('[data-bind="atc-menu"]')
     const signature = snapshot.atcMenu.map((item) => `${item.id}:${item.label}`).join('|')
@@ -347,7 +378,7 @@ export class CockpitOverlay {
     if (!ctx) return
     const width = canvas.clientWidth || 280
     const height = canvas.clientHeight || 150
-    fitCanvas(canvas, ctx, width, height)
+    fitCanvas(canvas, ctx, width, height, this.canvasCap())
     ctx.clearRect(0, 0, width, height)
     ctx.fillStyle = '#071018'
     ctx.fillRect(0, 0, width, height)
@@ -417,12 +448,13 @@ export class CockpitOverlay {
   }
 
   private paintNd(snapshot: HudSnapshot): void {
+    if (!this.wide && this.page !== 'nd') return
     const canvas = this.nd
     const ctx = canvas.getContext('2d')
     if (!ctx) return
     const width = canvas.clientWidth || 280
     const height = canvas.clientHeight || 180
-    fitCanvas(canvas, ctx, width, height)
+    fitCanvas(canvas, ctx, width, height, this.canvasCap())
     ctx.fillStyle = '#07141c'
     ctx.fillRect(0, 0, width, height)
     const range = 6 * 1852
@@ -611,8 +643,8 @@ function setText(root: ParentNode, name: string, value: string): void {
   })
 }
 
-function fitCanvas(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, width: number, height: number): void {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2)
+function fitCanvas(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, width: number, height: number, cap: number): void {
+  const dpr = Math.min(window.devicePixelRatio || 1, cap)
   const nextW = Math.max(1, Math.floor(width * dpr))
   const nextH = Math.max(1, Math.floor(height * dpr))
   if (canvas.width !== nextW || canvas.height !== nextH) {

@@ -1,7 +1,8 @@
 import * as THREE from 'three'
 import type { Weather } from '../game/weather'
 
-export function createSky(scene: THREE.Scene): { apply(weather: Weather): void } {
+export function createSky(scene: THREE.Scene): { apply(weather: Weather): void; setDetail(scale: number): void } {
+  let detail = 1
   const uniforms = {
     top: { value: new THREE.Color('#1c4e86') },
     horizon: { value: new THREE.Color('#f0d7b0') },
@@ -49,9 +50,12 @@ export function createSky(scene: THREE.Scene): { apply(weather: Weather): void }
     apply(weather) {
       const vis = weather.visibilityM
       uniforms.visibility.value = Math.max(0.25, Math.min(1, vis / 12000))
-      fog.near = Math.max(400, vis * 0.18)
-      fog.far = Math.max(fog.near + 800, vis * 0.92)
+      fog.near = Math.max(280, vis * 0.18 * detail)
+      fog.far = Math.max(fog.near + 700, vis * 0.92 * detail)
       sky.position.y = 0
+    },
+    setDetail(scale: number) {
+      detail = Math.max(0.55, Math.min(1, scale))
     },
   }
 }

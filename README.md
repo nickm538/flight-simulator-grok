@@ -12,7 +12,7 @@ You start on the stub at the end of runway 31L, flaps 5, parking brake set. Taxi
 
 The phone never shows the whole cockpit. A compact primary flight display stays on screen with speed, attitude, altitude, vertical speed, and heading, and it sits in the bottom strip so it does not cover the windshield. The right edge is the thrust lever, flap detents, and gear handle, with hit targets at least 44px. Navigation, engines, the mode control panel, the FMC, and ATC open one page at a time over the view; on a phone those page buttons wrap under the display so they stay on screen. On a wide desktop window the primary flight display, nav, and engines sit side by side, and the other pages still open over the view. Phone viewports cap the WebGL pixel ratio at 1.5, leave shadows off, and shorten the fog only if frames stay slower than about 30 per second.
 
-Drag the windshield to pitch and roll. Pull down to raise the nose. Two fingers, the right mouse button, or LOOK glance around. The exterior view shows the fans, gear, wheels, and the takeoff puff.
+Drag the windshield to pitch and roll. Drag up to raise the nose. Two fingers, the right mouse button, or LOOK glance around. The exterior view shows the fans, gear, wheels, and the takeoff puff.
 
 | Action | Touch | Keyboard |
 | --- | --- | --- |

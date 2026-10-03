@@ -10,7 +10,7 @@ The flight model is a simplified game approximation. It is not certified, not ap
 
 You start on the stub at the end of runway 31L, flaps 5, parking brake set. Taxi straight ahead onto the runway, take off, fly the left pattern over the bay, and land back on 31L. Gate B12 is on the terminal ramp after rollout.
 
-The phone never shows the whole cockpit. A compact primary flight display stays on screen with speed, attitude, altitude, vertical speed, and heading, and it sits in the bottom strip so it does not cover the windshield. The right edge is the thrust lever, flap detents, and gear handle, with hit targets at least 44px. Navigation, engines, the mode control panel, the FMC, and ATC open one page at a time over the view; on a phone those page buttons wrap under the display so they stay on screen. On a wide desktop window the primary flight display, nav, and engines sit side by side, and the other pages still open over the view. Phone viewports cap the WebGL pixel ratio at 1.5, leave shadows off, and shorten the fog only if frames stay slower than about 30 per second.
+The phone never shows the whole cockpit. A compact primary flight display stays on screen with speed, attitude, altitude, vertical speed, and heading, and it sits in the bottom strip so it does not cover the windshield. The right edge is the thrust lever, then one flap-up and one flap-down stepper, the gear handle, and a row for brake, reverse, and spoiler. Those hit targets are at least 44px, and the lever keeps vertical travel. Navigation, engines, the mode control panel, the FMC, and ATC open one page at a time over the view; on a phone those page buttons wrap under the display so they stay on screen. On a wide desktop window the primary flight display, nav, and engines sit side by side, and the other pages still open over the view. Phone viewports cap the WebGL pixel ratio at 1.5, leave shadows off, and shorten the fog only if frames stay slower than about 30 per second.
 
 Drag the windshield to pitch and roll. Drag up to raise the nose. Two fingers, the right mouse button, or LOOK glance around. The exterior view shows the fans, gear, wheels, and the takeoff puff.
 
@@ -19,10 +19,10 @@ Drag the windshield to pitch and roll. Drag up to raise the nose. Two fingers, t
 | Pitch / roll | Drag the view | W/S or arrows, A/D |
 | Look | Two fingers, or LOOK | |
 | Thrust | Right lever | Page Up / Page Down, `]` / `[` |
-| Flaps | Detent buttons | F down, Shift+F up |
+| Flaps | UP / DN steppers | F down, Shift+F up |
 | Gear | Gear handle | G |
-| Brakes | BRAKE, hold | Space |
-| Reverse / spoilers | REV / SPLR | R / X |
+| Brakes | BRK, hold | Space |
+| Reverse / spoilers | REV / SPLR on the rail | R / X |
 | Outside view | VIEW | V |
 | Center the look | CTR | C |
 

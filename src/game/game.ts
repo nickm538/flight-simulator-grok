@@ -121,8 +121,8 @@ export class Game {
     this.state = createFlightState(spawn.east, spawn.north, spawn.heading)
     this.overlay = new CockpitOverlay(this.app, {
       onThrottle: (value) => this.setThrottle(value),
-      onFlapIndex: (index) => {
-        this.flapIndex = index
+      onFlapStep: (delta) => {
+        this.flapIndex = clamp(this.flapIndex + delta, 0, FLAP_DETENTS.length - 1)
       },
       onGear: () => {
         this.gearDown = !this.gearDown

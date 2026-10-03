@@ -1,5 +1,5 @@
 :root {
-  --thumb: 96px;
+  --thumb: 164px;
   --dock: 188px;
   --ink: #e7eef6;
   --muted: #93a8bc;
@@ -76,8 +76,8 @@ html, body, #app {
 
 .throttle {
   position: relative;
-  flex: 1;
-  min-height: 120px;
+  flex: 1 1 auto;
+  min-height: 180px;
   border: 1px solid var(--line);
   border-radius: 18px;
   background: #101820;
@@ -95,7 +95,7 @@ html, body, #app {
   box-shadow: 0 6px 0 #8a6412;
 }
 
-.throttle span, .thumb-label {
+.throttle span {
   position: absolute;
   left: 0;
   right: 0;
@@ -106,40 +106,52 @@ html, body, #app {
   color: var(--muted);
 }
 
-.flap-stack {
+.flap-row, .aux-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 4px;
-  max-height: 34vh;
-  overflow: auto;
-  padding: 4px;
-  border-radius: 12px;
-  background: rgba(8, 16, 26, 0.9);
+  flex: 0 0 auto;
 }
 
-.thumb-label {
-  position: static;
-  grid-column: 1 / -1;
+.flap-row {
+  grid-template-columns: minmax(44px, 1fr) auto minmax(44px, 1fr);
+  align-items: center;
 }
 
-.flap-stack button, .gear-handle, .dock-bar button, .sheet button, .wx-row button, .mode-row button, .atc-menu button, .crash button, .stepper button {
+.flap-row strong {
+  min-width: 28px;
+  text-align: center;
+  font-size: 16px;
+  color: var(--gold);
+}
+
+.aux-row {
+  grid-template-columns: repeat(3, minmax(44px, 1fr));
+}
+
+.flap-row button, .aux-row button, .gear-handle, .dock-bar button, .sheet button, .wx-row button, .mode-row button, .atc-menu button, .crash button, .stepper button {
+  min-width: 44px;
   min-height: 44px;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: #13202c;
   color: var(--ink);
   font: inherit;
-  font-size: 14px;
+  font-size: 13px;
   touch-action: manipulation;
 }
 
-.flap-stack button.is-on, .gear-handle.is-down, .dock-bar button.is-on, .mode-row button.is-on, .wx-row button.is-on {
+.flap-row button:disabled {
+  opacity: 0.4;
+}
+
+.aux-row button.is-on, .gear-handle.is-down, .dock-bar button.is-on, .mode-row button.is-on, .wx-row button.is-on {
   background: var(--canyon);
   border-color: #8fb4e8;
   color: white;
 }
 
 .gear-handle {
+  flex: 0 0 auto;
   font-weight: 700;
 }
 
@@ -226,9 +238,11 @@ html, body, #app {
 .hud[data-page=""] .yoke { display: block; }
 
 .hud[data-layout="narrow"] {
-  --thumb: 112px;
+  --thumb: 164px;
   --dock: 280px;
 }
+.hud[data-layout="narrow"] .dock-panels,
+.hud[data-layout="narrow"] .panel { min-height: 0; }
 .hud[data-layout="narrow"] .panel-nd { display: none; }
 .hud[data-layout="narrow"] .panel-pfd { height: 112px; min-height: 112px; }
 .hud[data-layout="narrow"] .dock-bar {
@@ -246,15 +260,12 @@ html, body, #app {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.hud[data-layout="narrow"] .flap-stack {
-  max-height: none;
-  touch-action: pan-y;
-  overscroll-behavior: contain;
-}
-.hud[data-layout="narrow"] .flap-stack button,
+.hud[data-layout="narrow"] .flap-row button,
+.hud[data-layout="narrow"] .aux-row button,
 .hud[data-layout="narrow"] .gear-handle,
 .hud[data-layout="narrow"] .dock-bar button {
   min-width: 44px;
+  min-height: 44px;
 }
 .hud[data-layout="narrow"] .page { touch-action: pan-y; overscroll-behavior: contain; }
 
@@ -298,9 +309,7 @@ html, body, #app {
 }
 
 @media (max-height: 520px) {
-  :root { --dock: 132px; --thumb: 148px; }
-  .thumb { flex-direction: row; width: var(--thumb); }
-  .flap-stack { max-height: none; overflow: auto; }
+  :root { --dock: 132px; --thumb: 164px; }
   .panel-pfd { height: 92px; min-height: 92px; }
-  .throttle { min-height: 80px; }
+  .throttle { min-height: 96px; }
 }

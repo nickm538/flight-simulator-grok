@@ -59,7 +59,7 @@ export interface HudSnapshot {
 
 export interface OverlayHandlers {
   onThrottle(value: number): void
-  onFlapIndex(index: number): void
+  onFlapStep(delta: number): void
   onGear(): void
   onView(): void
   onLookMode(): void
@@ -143,9 +143,10 @@ export class CockpitOverlay {
     if (n1) n1.textContent = `N1 ${snapshot.n1.toFixed(0)}`
     const flapLabel = this.root.querySelector('[data-bind="flap"]')
     if (flapLabel) flapLabel.textContent = FLAP_DETENTS[snapshot.flapIndex] === 0 ? 'UP' : String(FLAP_DETENTS[snapshot.flapIndex])
-    this.root.querySelectorAll<HTMLButtonElement>('[data-flap]').forEach((button) => {
-      button.classList.toggle('is-on', Number(button.dataset.flap) === snapshot.flapIndex)
-    })
+    const flapUp = this.root.querySelector<HTMLButtonElement>('[data-flap-step="-1"]')
+    const flapDown = this.root.querySelector<HTMLButtonElement>('[data-flap-step="1"]')
+    if (flapUp) flapUp.disabled = snapshot.flapIndex <= 0
+    if (flapDown) flapDown.disabled = snapshot.flapIndex >= FLAP_DETENTS.length - 1
     const gear = this.root.querySelector<HTMLButtonElement>('[data-gear]')
     if (gear) {
       gear.classList.toggle('is-down', snapshot.gearCommandDown)
@@ -155,7 +156,7 @@ export class CockpitOverlay {
     if (knob) knob.style.bottom = `${snapshot.throttle * 100}%`
     const brake = this.root.querySelector('[data-brake]')
     brake?.classList.toggle('is-on', snapshot.brake > 0.5 || snapshot.parkingBrake)
-    if (brake) brake.textContent = snapshot.parkingBrake ? 'PARK' : 'BRAKE'
+    if (brake) brake.textContent = snapshot.parkingBrake ? 'PARK' : 'BRK'
     this.root.querySelector('[data-rev]')?.classList.toggle('is-on', snapshot.reverse)
     this.root.querySelector('[data-spoiler]')?.classList.toggle('is-on', snapshot.spoiler > 0.5)
     this.root.querySelector('[data-view]')?.classList.toggle('is-on', snapshot.chase)
@@ -188,8 +189,8 @@ export class CockpitOverlay {
     throttle?.addEventListener('touchstart', blockGesture, { passive: false })
     throttle?.addEventListener('touchmove', blockGesture, { passive: false })
 
-    this.root.querySelectorAll<HTMLButtonElement>('[data-flap]').forEach((button) => {
-      button.addEventListener('click', () => this.handlers.onFlapIndex(Number(button.dataset.flap)))
+    this.root.querySelectorAll<HTMLButtonElement>('[data-flap-step]').forEach((button) => {
+      button.addEventListener('click', () => this.handlers.onFlapStep(Number(button.dataset.flapStep)))
     })
     this.root.querySelector('[data-gear]')?.addEventListener('click', () => this.handlers.onGear())
     this.root.querySelector('[data-view]')?.addEventListener('click', () => this.handlers.onView())
@@ -515,10 +516,6 @@ export class CockpitOverlay {
 }
 
 function markup(): string {
-  const flaps = FLAP_DETENTS.map(
-    (detent, index) =>
-      `<button type="button" data-flap="${index}">${detent === 0 ? 'UP' : detent}</button>`,
-  ).join('')
   return `
     <div class="yoke" data-testid="yoke"></div>
     <aside class="thumb" data-testid="thumb">
@@ -526,11 +523,17 @@ function markup(): string {
         <div class="throttle-knob"></div>
         <span data-bind="n1">N1 22</span>
       </div>
-      <div class="flap-stack" data-testid="flaps">
-        <span class="thumb-label">FLAPS <strong data-bind="flap">5</strong></span>
-        ${flaps}
+      <div class="flap-row" data-testid="flaps">
+        <button type="button" data-flap-step="-1" aria-label="Flaps up">UP</button>
+        <strong data-bind="flap">5</strong>
+        <button type="button" data-flap-step="1" aria-label="Flaps down">DN</button>
       </div>
       <button type="button" class="gear-handle is-down" data-gear data-testid="gear">GEAR DOWN</button>
+      <div class="aux-row">
+        <button type="button" data-brake>PARK</button>
+        <button type="button" data-rev>REV</button>
+        <button type="button" data-spoiler>SPLR</button>
+      </div>
     </aside>
     <footer class="dock">
       <div class="dock-panels">
@@ -555,9 +558,6 @@ function markup(): string {
         <button type="button" data-view>VIEW</button>
         <button type="button" data-look>LOOK</button>
         <button type="button" data-center>CTR</button>
-        <button type="button" data-brake>PARK</button>
-        <button type="button" data-rev>REV</button>
-        <button type="button" data-spoiler>SPLR</button>
         <span class="note" data-bind="note"></span>
       </div>
     </footer>

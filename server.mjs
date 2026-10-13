@@ -19,8 +19,15 @@ const types = {
 }
 
 const server = createServer((request, response) => {
-  const url = new URL(request.url ?? '/', 'http://localhost')
-  const requested = normalize(decodeURIComponent(url.pathname))
+  let requested
+  try {
+    const url = new URL(request.url ?? '/', 'http://localhost')
+    requested = normalize(decodeURIComponent(url.pathname))
+  } catch {
+    response.writeHead(400)
+    response.end('Bad request')
+    return
+  }
   const relative = requested.replace(/^[/\\]+/, '')
   let path = resolve(root, relative)
   if (!path.startsWith(root)) {

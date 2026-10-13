@@ -341,7 +341,8 @@ function mergeParts(parts: { geometry: THREE.BufferGeometry; color: THREE.Color 
   const positions: number[] = []
   const colors: number[] = []
   for (const part of parts) {
-    const position = part.geometry.getAttribute('position')
+    const source = part.geometry.index ? part.geometry.toNonIndexed() : part.geometry
+    const position = source.getAttribute('position')
     for (let i = 0; i < position.count; i += 1) {
       positions.push(position.getX(i), position.getY(i), position.getZ(i))
       colors.push(part.color.r, part.color.g, part.color.b)

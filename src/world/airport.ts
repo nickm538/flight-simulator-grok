@@ -143,7 +143,7 @@ function landMesh(material: THREE.Material): THREE.Mesh {
   const positions: number[] = []
   for (let i = 0; i < hull.length; i += 1) {
     const next = hull[(i + 1) % hull.length]
-    positions.push(center.east, 0.02, center.north, hull[i].east, 0.02, hull[i].north, next.east, 0.02, next.north)
+    positions.push(center.east, 0.02, center.north, next.east, 0.02, next.north, hull[i].east, 0.02, hull[i].north)
   }
   const geometry = new THREE.BufferGeometry()
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))

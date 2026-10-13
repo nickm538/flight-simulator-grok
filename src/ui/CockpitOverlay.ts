@@ -196,9 +196,10 @@ export class CockpitOverlay {
     this.root.querySelector('[data-view]')?.addEventListener('click', () => this.handlers.onView())
     this.root.querySelector('[data-look]')?.addEventListener('click', () => this.handlers.onLookMode())
     this.root.querySelector('[data-center]')?.addEventListener('click', () => this.handlers.onCenterLook())
-    const brake = this.root.querySelector('[data-brake]')
+    const brake = this.root.querySelector<HTMLElement>('[data-brake]')
     brake?.addEventListener('pointerdown', (event) => {
       event.preventDefault()
+      brake.setPointerCapture(event.pointerId)
       this.handlers.onBrake(true)
     })
     const release = () => this.handlers.onBrake(false)

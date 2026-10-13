@@ -291,6 +291,8 @@ function wingGeometry(mirror: boolean): THREE.BufferGeometry {
 function stabilizerGeometry(): THREE.BufferGeometry {
   return loftStations(
     [
+      { x: -6.5, zLe: -19.15, chord: 1.15, y: 1.15, thick: 0.08 },
+      { x: -0.7, zLe: -16.6, chord: 3.3, y: 0.72, thick: 0.26 },
       { x: 0.7, zLe: -16.6, chord: 3.3, y: 0.72, thick: 0.26 },
       { x: 6.5, zLe: -19.15, chord: 1.15, y: 1.15, thick: 0.08 },
     ],

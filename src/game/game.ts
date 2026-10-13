@@ -250,7 +250,7 @@ export class Game {
     const env = this.environment()
     const pilotPitch = clamp(this.yokePitch + this.keyPitch, -1, 1)
     const pilotRoll = clamp(this.yokeRoll + this.keyRoll, -1, 1)
-    const assisted = autopilotOutputs(this.state, env, this.ap, this.throttle)
+    const assisted = autopilotOutputs(this.state, env, this.ap, this.throttle, dt)
     let pitch = pilotPitch
     let roll = pilotRoll
     let throttle = this.throttle

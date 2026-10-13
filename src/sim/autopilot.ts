@@ -43,6 +43,7 @@ export function autopilotOutputs(
   env: SimEnvironment,
   ap: AutopilotCommand,
   throttleNow: number,
+  dt: number,
 ): AutopilotOutput {
   const trueDeg = (ap.headingMag - 13 + 360) % 360
   const err = wrapPi(rad(trueDeg) - state.heading)
@@ -61,7 +62,7 @@ export function autopilotOutputs(
 
   const ias = mpsToKt(Math.max(0, iasMps(state, env)))
   const speedErr = ap.speedKt - ias
-  const throttle = clamp(throttleNow + speedErr * 0.015, 0.05, 1)
+  const throttle = clamp(throttleNow + speedErr * 0.015 * dt, 0.05, 1)
 
   return {
     pitch: ap.engaged ? pitch : 0,

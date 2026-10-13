@@ -542,7 +542,7 @@ function updateDust(
 ): void {
   const positions = points.geometry.getAttribute('position') as THREE.BufferAttribute
   const tmp = new THREE.Vector3()
-  let cursor = 0
+  let cursor = Number(points.userData.dustCursor ?? 0)
   if (state.dust) {
     for (const exhaust of exhausts) {
       exhaust.getWorldPosition(tmp)
@@ -556,6 +556,7 @@ function updateDust(
         cursor += 1
       }
     }
+    points.userData.dustCursor = cursor
   }
   for (let i = 0; i < particles.length; i += 1) {
     const particle = particles[i]

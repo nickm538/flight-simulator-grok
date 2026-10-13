@@ -326,7 +326,8 @@ function loftStations(stations: WingStation[], mirror: boolean): THREE.BufferGeo
       const b = i * per + ((p + 1) % per)
       const c = (i + 1) * per + p
       const d = (i + 1) * per + ((p + 1) % per)
-      indices.push(a, c, b, b, c, d)
+      if (mirror) indices.push(a, b, c, b, d, c)
+      else indices.push(a, c, b, b, c, d)
     }
   }
   const geometry = new THREE.BufferGeometry()

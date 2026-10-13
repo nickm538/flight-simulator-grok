@@ -247,7 +247,7 @@ function stepOnce(state: FlightState, input: ControlInput, env: SimEnvironment, 
   const limit = FLAP_LIMIT_KT[flapIndex]
   if (movingDown && iasKt > limit) {
     flapIndex = state.flapIndex
-    state.advisory = `Flap load relief. ${FLAP_DETENTS[flapIndex]} is limited to ${limit} kt in this model.`
+    state.advisory = `Flap load relief. ${FLAP_DETENTS[clamp(Math.round(input.flapIndex), 0, FLAP_DETENTS.length - 1)]} is limited to ${limit} kt in this model.`
   } else if (state.advisory.startsWith('Flap load')) {
     state.advisory = ''
   }
